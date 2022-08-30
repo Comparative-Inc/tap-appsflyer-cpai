@@ -53,8 +53,8 @@ class MasterAPIStream(AppsFlyerStream):
         self, context: Optional[dict], next_page_token: Optional[Any]
     ) -> Dict[str, Any]:
         now = datetime.datetime.utcnow()
-        from_str = (now - datetime.timedelta(days = self.config.get("from_previous_days"))).strptime("yyyy-mm-dd")
-        to_str = (now - datetime.timedelta(days = self.config.get("to_previous_days"))).strptime("yyyy-mm-dd")
+        from_str = (now - datetime.timedelta(days = self.config.get("from_previous_days"))).strftime("yyyy-mm-dd")
+        to_str = (now - datetime.timedelta(days = self.config.get("to_previous_days"))).strftime("yyyy-mm-dd")
 
         """Return a dictionary of values to be used in URL parameterization."""
         params: dict = {
