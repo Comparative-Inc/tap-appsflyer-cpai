@@ -1,7 +1,7 @@
 """Stream type classes for tap-appsflyer-cpai."""
 
-from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Union
+import datetime
+from typing import Any, Dict, List, Optional
 
 from singer_sdk import typing as th  # JSON Schema typing helpers
 
@@ -52,14 +52,18 @@ class MasterAPIStream(AppsFlyerStream):
     def get_url_params(
         self, context: Optional[dict], next_page_token: Optional[Any]
     ) -> Dict[str, Any]:
+        now = datetime.datetime.utcnow()
+        from_str = (now - datetime.timedelta(days = self.config.get("from_previous_days"))).strptime("yyyy-mm-dd")
+        to_str = (now - datetime.timedelta(days = self.config.get("to_previous_days"))).strptime("yyyy-mm-dd")
+
         """Return a dictionary of values to be used in URL parameterization."""
         params: dict = {
             "api_token": self.config.get("api_token"),
             "app_id": self.config.get("app_id"),
             "groupings": self.config.get("groupings"),
             "kpis": self.config.get("kpis"),
-            "from": self.config.get("from"),
-            "to": self.config.get("to"),
+            "from": from_str,
+            "to": to_str,
             "format": "json",
         }
         return params

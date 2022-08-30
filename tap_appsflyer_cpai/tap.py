@@ -30,14 +30,16 @@ class TapAppsFlyer(Tap):
             description="App ID(s) to replicate"
         ),
         th.Property(
-            "from",
-            th.DateType,
-            description="The earliest record date to sync"
+            "from_previous_days",
+            th.IntegerType,
+            required=True,
+            description="The earliest record date to sync is calculated as (today - from_previous_days) in UTC"
         ),
         th.Property(
-            "to",
-            th.DateType,
-            description="The latest record date to sync"
+            "to_previous_days",
+            th.IntegerType,
+            required=True,
+            description="The latest record date to sync is calculated as (today - to_previous_days) in UTC"
         ),
         th.Property(
             "groupings",
