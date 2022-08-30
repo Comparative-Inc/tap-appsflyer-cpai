@@ -54,8 +54,11 @@ class MasterAPIStream(AppsFlyerStream):
     ) -> Dict[str, Any]:
         now = datetime.datetime.utcnow()
         # TODO split into 14 days chunks, maybe use pagination methods?
-        from_str = (now - datetime.timedelta(days = self.config.get("from_previous_days"))).strftime("yyyy-mm-dd")
-        to_str = (now - datetime.timedelta(days = self.config.get("to_previous_days"))).strftime("yyyy-mm-dd")
+        from_date = now - datetime.timedelta(days = self.config.get("from_previous_days"))
+        to_date = now - datetime.timedelta(days = self.config.get("to_previous_days"))
+
+        from_str = from_date.strftime("%Y-%m-%d")
+        to_str = to_date.strftime("%Y-%m-%d")
 
         """Return a dictionary of values to be used in URL parameterization."""
         params: dict = {
@@ -67,7 +70,6 @@ class MasterAPIStream(AppsFlyerStream):
             "to": to_str,
             "format": "json",
         }
-        print(params)
         return params
 
     def post_process(self, row: dict, context: Optional[dict] = None) -> Optional[dict]:
