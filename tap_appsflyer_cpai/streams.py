@@ -20,7 +20,7 @@ COL_NAME_MAPPERS = {
 }
 
 class MasterAPIStream(AppsFlyerStream):
-    name = "master"
+    name = "appsflyer_master_api"
     path = "/export/master_report/v4"
     replication_key = None
 
