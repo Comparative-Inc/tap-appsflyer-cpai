@@ -43,10 +43,12 @@ COL_NAME_MAPPERS = {
 }
 
 """
-Paginate so that every request takes only 14 days
-It's a weird appsflyer master api issue: if the duration is more than 14 days, some ROAS numbers turn to 0
+Paginate so that every request takes only 1 days
+It's a weird appsflyer master api issue: if the duration is more than SAFE_DATE_RANGE days, some ROAS metrics turn to 0.
+
+Reported the bug to appsflyer
 """
-SAFE_DATE_RANGE = 14
+SAFE_DATE_RANGE = 1
 class MasterAPIStream(AppsFlyerStream):
     name = "appsflyer_master_api"
     path = "/export/master_report/v4"
