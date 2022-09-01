@@ -14,11 +14,38 @@ from tap_appsflyer_cpai.client import AppsFlyerStream
 COL_NAME_MAPPERS = {
     "App ID": "app_id",
     "Media Source": "pid",
+    "Agency": "af_prt",
     "Campaign": "c",
-    "GEO": "geo",
+    "Adset": "af_adset",
+    "Ad": "af_ad",
+    "Channel": "af_channel",
+    "Publisher ID": "af_siteid",
+    "Keywords": "af_keywords",
+    "Is Primary Attribution": "is_primary",
+    "Campaign ID": "af_c_id",
+    "Adset ID": "af_adset_id",
+    "Ad ID": "af_ad_id",
     "Install Time": "install_time",
     "Touch Type": "attributed_touch_type",
+    "GEO": "geo",
+    "Clicks": "clicks",
+    "Installs": "installs",
+    "Impressions": "impressions",
+    "Average eCPI": "average_ecpi",
+    "Conversion Rate": "cr",
+    "Cost": "cost",
+    "Revenue": "revenue",
+    "ROI": "roi",
+    "Cohort Day 1 - Total Revenue Per User": "cohort_day_1_total_revenue_per_user",
+    "Cohort Day 3 - Total Revenue Per User": "cohort_day_3_total_revenue_per_user",
+    "Cohort Day 7 - Total Revenue Per User": "cohort_day_7_total_revenue_per_user",
+    "Cohort Day 30 - Total Revenue Per User": "cohort_day_30_total_revenue_per_user",
 }
+
+"""
+Paginate so that every request takes only 14 days
+It's a weird appsflyer master api issue: if the duration is more than 14 days, some ROAS numbers turn to 0
+"""
 SAFE_DATE_RANGE = 14
 class MasterAPIStream(AppsFlyerStream):
     name = "appsflyer_master_api"
@@ -32,18 +59,18 @@ class MasterAPIStream(AppsFlyerStream):
         th.Property("geo", th.StringType),
         th.Property("install_time", th.DateType),
         th.Property("pid", th.StringType),
-        th.Property("Impressions", th.IntegerType),
-        th.Property("Clicks", th.IntegerType),
-        th.Property("Installs", th.IntegerType),
-        th.Property("Cost", th.NumberType),
-        th.Property("Average eCPI", th.NumberType),
-        th.Property("ROI", th.NumberType),
-        th.Property("Revenue", th.NumberType),
-        th.Property("Conversion Rate", th.NumberType),
-        th.Property("Cohort Day 1 - Total Revenue Per User", th.NumberType),
-        th.Property("Cohort Day 3 - Total Revenue Per User", th.NumberType),
-        th.Property("Cohort Day 7 - Total Revenue Per User", th.NumberType),
-        th.Property("Cohort Day 30 - Total Revenue Per User", th.NumberType),
+        th.Property("impressions", th.IntegerType),
+        th.Property("clicks", th.IntegerType),
+        th.Property("installs", th.IntegerType),
+        th.Property("cost", th.NumberType),
+        th.Property("average_ecpi", th.NumberType),
+        th.Property("roi", th.NumberType),
+        th.Property("revenue", th.NumberType),
+        th.Property("cr", th.NumberType),
+        th.Property("cohort_day_1_total_revenue_per_user", th.NumberType),
+        th.Property("cohort_day_3_total_revenue_per_user", th.NumberType),
+        th.Property("cohort_day_7_total_revenue_per_user", th.NumberType),
+        th.Property("cohort_day_30_total_revenue_per_user", th.NumberType),
     ).to_dict()
 
     @property
@@ -57,10 +84,6 @@ class MasterAPIStream(AppsFlyerStream):
         return from_date, to_date
 
     def get_next_page_token( self, response: requests.Response, previous_token: Optional[datetime.datetime]) -> Optional[datetime.datetime]:
-        """
-        Paginate so that every request takes only 14 days
-        It's a weird appsflyer master api issue: if the duration is more than 14 days, some ROAS numbers turn to 0
-        """
         from_date, to_date = self.get_date_range()
         page_from_date = (previous_token or from_date) + datetime.timedelta(days = SAFE_DATE_RANGE)
         if page_from_date > to_date:
