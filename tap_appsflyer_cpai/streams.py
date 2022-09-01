@@ -1,8 +1,9 @@
 """Stream type classes for tap-appsflyer-cpai."""
 
 import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
+import requests
 from singer_sdk import typing as th  # JSON Schema typing helpers
 
 from tap_appsflyer_cpai.client import AppsFlyerStream
@@ -18,7 +19,7 @@ COL_NAME_MAPPERS = {
     "Install Time": "install_time",
     "Touch Type": "attributed_touch_type",
 }
-
+SAFE_DATE_RANGE = 14
 class MasterAPIStream(AppsFlyerStream):
     name = "appsflyer_master_api"
     path = "/export/master_report/v4"
@@ -49,13 +50,30 @@ class MasterAPIStream(AppsFlyerStream):
     def primary_keys(self) -> Optional[List[str]]:
         return self.config.get("groupings", "").split(",")
 
+    def get_date_range(self) -> Tuple[datetime.datetime, datetime.datetime]:
+        now = datetime.datetime.utcnow()
+        to_date = now - datetime.timedelta(days = self.config.get("up_to_days_ago"))
+        from_date = to_date - datetime.timedelta(days = self.config.get("date_range") - 1)
+        return from_date, to_date
+
+    def get_next_page_token( self, response: requests.Response, previous_token: Optional[datetime.datetime]) -> Optional[datetime.datetime]:
+        """
+        Paginate so that every request takes only 14 days
+        It's a weird appsflyer master api issue: if the duration is more than 14 days, some ROAS numbers turn to 0
+        """
+        from_date, to_date = self.get_date_range()
+        page_from_date = (previous_token or from_date) + datetime.timedelta(days = SAFE_DATE_RANGE)
+        if page_from_date > to_date:
+            return None
+        return page_from_date
+
     def get_url_params(
         self, context: Optional[dict], next_page_token: Optional[Any]
     ) -> Dict[str, Any]:
-        now = datetime.datetime.utcnow()
-        # TODO split into 14 days chunks, maybe use pagination methods?
-        from_date = now - datetime.timedelta(days = self.config.get("from_previous_days"))
-        to_date = now - datetime.timedelta(days = self.config.get("to_previous_days"))
+        from_date, to_date = self.get_date_range()
+
+        from_date = next_page_token or from_date
+        to_date = min(to_date, from_date + datetime.timedelta(days = SAFE_DATE_RANGE - 1))
 
         from_str = from_date.strftime("%Y-%m-%d")
         to_str = to_date.strftime("%Y-%m-%d")
